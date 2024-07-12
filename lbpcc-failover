@@ -1,0 +1,33 @@
+/ip firewall address-list
+add address=192.168.0.0/16 list=LOCAL-IP
+add address=172.16.0.0/12 list=LOCAL-IP
+add address=10.0.0.0/8 list=LOCAL-IP
+
+/ip firewall nat
+add chain=srcnat out-interface="wan1" action=masquerade
+add chain=srcnat out-interface="wan2" action=masquerade
+
+/ip firewall mangle
+add action=mark-connection chain=input in-interface="wan1" new-connection-mark="cm-wan1" passthrough=yes
+add action=mark-connection chain=input in-interface="wan2" new-connection-mark="cm-wan2" passthrough=yes
+add action=mark-routing chain=output connection-mark="cm-wan1" new-routing-mark="to-wan1" passthrough=yes
+add action=mark-routing chain=output connection-mark="cm-wan2" new-routing-mark="to-wan2" passthrough=yes
+add action=mark-connection chain=prerouting dst-address-list=!LOCAL-IP dst-address-type=!local new-connection-mark="cm-wan1" passthrough=yes per-connection-classifier=both-addresses-and-ports:2/0 src-address-list=LOCAL-IP
+add action=mark-connection chain=prerouting dst-address-list=!LOCAL-IP dst-address-type=!local new-connection-mark="cm-wan2" passthrough=yes per-connection-classifier=both-addresses-and-ports:2/1 src-address-list=LOCAL-IP
+add action=mark-routing chain=prerouting connection-mark="cm-wan1" dst-address-list=!LOCAL-IP new-routing-mark="to-wan1" passthrough=yes src-address-list=LOCAL-IP
+add action=mark-routing chain=prerouting connection-mark="cm-wan2" dst-address-list=!LOCAL-IP new-routing-mark="to-wan2" passthrough=yes src-address-list=LOCAL-IP
+
+
+/ip route
+add check-gateway=ping comment=isp1 distance=1 gateway=1.1.1.1 routing-mark=\
+to-ether1 target-scope=30
+add comment="backup isp2" distance=2 gateway=gateway_address_isp2 routing-mark=\
+to-ether1
+add check-gateway=ping comment=isp2 distance=1 gateway=8.8.8.8 routing-mark=\
+to-ether2 target-scope=30
+add comment="backup isp1" distance=2 gateway=gateway_address_isp1 routing-mark=\
+to-ether2
+add check-gateway=ping distance=1 gateway=gateway_address_isp1
+add check-gateway=ping distance=2 gateway=gateway_address_isp2
+add distance=1 dst-address=1.1.1.1/32 gateway=gateway_address_isp1
+add distance=1 dst-address=8.8.8.8/32 gateway=gateway_address_isp2
