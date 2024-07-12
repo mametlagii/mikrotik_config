@@ -1,0 +1,13 @@
+#Membuat Mangle 
+
+/ip firewall mangle
+add action=mark-connection chain=prerouting new-connection-mark=Down-Client src-mac-address=00:00:00:00:00:00
+add action=mark-packet chain=prerouting connection-mark=Down-Client new-packet-mark=Down-Client passthrough=no
+add action=mark-packet chain=prerouting new-packet-mark=Up-Client passthrough=no src-mac-address=00:00:00:00:00:00
+
+#Membuat Queue
+
+/queue tree add max-limit=100M name=upload parent=public
+add limit-at=30M max-limit=50M name=Up-Client packet-mark=Up-Client parent=upload
+add max-limit=100M name=download parent=local
+add limit-at=30M max-limit=50M name=Down-Client packet-mark=Down-Client parent=download queue=default
