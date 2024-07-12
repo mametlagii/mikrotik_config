@@ -1,0 +1,6 @@
+:local queueName "Client- $leaseActMAC";
+:if ($leaseBound = "1") do={
+/queue simple add name=$queueName target=($leaseActIP . "/32") parent=interface-name max-limit=1152k/1152k burst-threshold=1280k/1280k burst-limit=1532k/1532k burst-time=40/40 comment=[/ip dhcp-server lease get [find where active-mac-address=$leaseActMAC && active-address=$leaseActIP] host-name];
+} else={
+/queue simple remove $queueName
+}
