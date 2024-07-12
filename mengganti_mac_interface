@@ -1,0 +1,9 @@
+[admin@MikroTik] > /interface print
+Mengganti mac address sebuah interface
+[admin@MikroTik] > /interface <interfaceType> set <interfaceName> mac-address=<newMacAddress>
+- example -
+[admin@MikroTik] > /interface ether set ether1 mac-address=AA:BB:CC:DD:EE:F8
+Mengembalikan ke default
+[admin@MikroTik] > /interface <interfaceType> reset-mac-address <interfaceName>
+- example -
+[admin@MikroTik] > /interface ether reset-mac-address ether1
